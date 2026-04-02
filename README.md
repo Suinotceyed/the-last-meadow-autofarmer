@@ -23,9 +23,8 @@ Because Discord Activities run inside an iframe, you must run this script from y
 1. Open Discord in your **web browser** (Chrome, Firefox, Edge, etc.) and launch *The Last Meadow*.
 2. Press `F12` (or `Ctrl+Shift+I`) to open Developer Tools.
 3. Click on the **Console** tab.
-4. **CRITICAL:** At the top left of the console, look for a dropdown menu that says `top`. Click it and change the context to the iframe running the game (it will usually look like a long string of numbers or say something related to the activity).
-5. Copy the code from `autofarm.js` in this repository.
-6. Paste it into the console and hit **Enter**.
+4. Copy the code from `autofarm.js` in this repository.
+5. Paste it into the console and hit **Enter**.
 
 ## ⚙️ Configuration
 
