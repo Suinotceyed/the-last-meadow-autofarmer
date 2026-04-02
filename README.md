@@ -55,9 +55,9 @@ const config = {
 
 Once the script is running, you can control it directly from the console. Type any of the following commands and hit **Enter**:
 
-* `tlmBot.stop()` — **Pauses the bot.** Useful if you want to manually navigate the menus to check your inventory or upgrade gear.
-* `tlmBot.start()` — **Resumes the bot.** Starts the automation loop again without needing to refresh the page or paste the code again.
-* `tlmBot.status()` — **Prints your session stats.** Opens a table in the console showing exactly how many targets you've sniped, sequences you've solved, and triplets you've matched this session.
+* `tlmBot.stop()` — **Stops the bot.** 
+* `tlmBot.start()` — **Resumes the bot.** 
+* `tlmBot.status()` — **Prints your session stats.** 
 
 ---
 
