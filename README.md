@@ -1,4 +1,5 @@
 # 🐉 The Last Meadow - Universal Auto-Farmer
+<img width="2559" height="1289" alt="TheLastMeadow" src="https://github.com/user-attachments/assets/5b19fadb-e755-4ebc-86a3-6ceee9e072e5" />
 
 A fully automated, priority-driven farming script for the Discord activity "The Last Meadow". 
 
