@@ -43,11 +43,5 @@ Because Discord Activities run inside an iframe, you must run this script from y
 
 ---
 
-## 🐛 Known Game Quirks
-
-* **The 24-Hour Cooldown Bug:** The game features a strict 24-hour cooldown when changing your Class or Profession. Occasionally, the visual timer will hit 0:00, but the server will still reject your class change (throwing a `400 Bad Request` in the console). If the button isn't working, wait another 10–15 minutes for the server clock to catch up!
-
----
-
 ## 🤝 Contributing
 Feel free to fork this repository, submit pull requests, or open issues if Discord updates their class names and breaks the script!
