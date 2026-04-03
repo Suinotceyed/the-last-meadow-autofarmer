@@ -6,7 +6,7 @@
         autoCraft: true,   // Handles both Arrows and 3x3 Grid
         autoBattle: true,  // Handles Shrinking Targets + Shield
         clickDragon: true,
-        clickAdventure: true
+        clickAdventure: true,
     };
 
     let state = {
@@ -22,8 +22,8 @@
             targetsSniped: 0,
             tripletsMatched: 0,
             popupsCleared: 0,
-            shieldBlocks: 0
-        }
+            shieldBlocks: 0,
+        },
     };
 
     const utils = {
@@ -33,7 +33,7 @@
                 key,
                 code: key,
                 keyCode: map[key],
-                bubbles: true
+                bubbles: true,
             }));
             ev('keydown');
             ev('keyup');
@@ -56,7 +56,7 @@
                 x: rect.left + rect.width / 2,
                 y: rect.top + rect.height / 2,
                 width: rect.width,
-                height: rect.height
+                height: rect.height,
             };
         },
 
@@ -68,7 +68,7 @@
                 clientX,
                 clientY,
                 screenX: clientX,
-                screenY: clientY
+                screenY: clientY,
             });
 
             targetEl.dispatchEvent(ev);
