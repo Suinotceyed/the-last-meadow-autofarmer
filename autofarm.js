@@ -353,6 +353,8 @@
             console.log("%c[TLM BOT] Stopped.", "color: #ff0000; font-weight: bold;");
         },
 
+        config,
+
         status: () => {
             console.table(state.stats);
             return state;
