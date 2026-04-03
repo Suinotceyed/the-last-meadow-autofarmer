@@ -1,5 +1,8 @@
 # 🐉 The Last Meadow - Universal Auto-Farmer
-<img width="2558" height="1288" alt="The Last Meadow" src="https://github.com/user-attachments/assets/13e9ace9-f555-4eeb-8b43-a9df54a966c6" />
+
+<p align="center">
+  <img width="850" alt="The Last Meadow" src="https://github.com/user-attachments/assets/13e9ace9-f555-4eeb-8b43-a9df54a966c6" />
+</p>
 
 A fully automated, priority-driven farming script for the Discord activity "The Last Meadow". 
 
@@ -7,9 +10,9 @@ Unlike basic auto-clickers, this script features a **Priority Engine**, a **Live
 
 ## ✨ Features
 
-* **Interactive GUI Overlay:** Control the bot, toggle settings, and view live stats directly on your screen without typing console commands.
-<img width="337" height="362" alt="TLM GUI" src="https://github.com/user-attachments/assets/ef8e015d-a76a-4c73-bcc6-3a94ef26f19c" />
+<img align="right" width="280" alt="TLM GUI" src="https://github.com/user-attachments/assets/ef8e015d-a76a-4c73-bcc6-3a94ef26f19c" />
 
+* **Interactive GUI Overlay:** Control the bot, toggle settings, and view live stats directly on your screen without typing console commands.
 * **Universal Class & Activity Support:** The script automatically detects the active mini-game based on what you are doing and your chosen class:
   * 🛠️ **Crafting (All Classes):** Reads and executes the directional Arrow sequence.
   * 🏹 **Battling (Ranger Class):** DOM-reactive aim-bot to instantly snipe shrinking targets.
@@ -37,6 +40,12 @@ Because Discord Activities run inside an iframe, you must run this script from y
 4. Open the `autofarm.js` file in this repository and copy all the code.
 5. Paste it into the console and hit **Enter**.
 6. The TLM Bot interface will appear in the top-left corner of the game!
+
+---
+
+## 🐛 Known Game Quirks
+
+* **The 24-Hour Cooldown Bug:** The game features a strict 24-hour cooldown when changing your Class or Profession. Occasionally, the visual timer will hit 0:00, but the server will still reject your class change (throwing a `400 Bad Request` in the console). If the button isn't working, wait another 10–15 minutes for the server clock to catch up!
 
 ---
 
