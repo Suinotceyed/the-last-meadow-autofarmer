@@ -1,5 +1,5 @@
 # 🐉 The Last Meadow - Universal Auto-Farmer
-<img width="2558" height="1289" alt="The Last Meadow" src="https://github.com/user-attachments/assets/2ef56875-3e7f-486a-9582-430ada96e38a" />
+<img width="2558" height="1288" alt="The Last Meadow" src="https://github.com/user-attachments/assets/13e9ace9-f555-4eeb-8b43-a9df54a966c6" />
 
 A fully automated, priority-driven farming script for the Discord activity "The Last Meadow". 
 
@@ -8,6 +8,8 @@ Unlike basic auto-clickers, this script features a **Priority Engine**, a **Live
 ## ✨ Features
 
 * **Interactive GUI Overlay:** Control the bot, toggle settings, and view live stats directly on your screen without typing console commands.
+<img width="337" height="362" alt="TLM GUI" src="https://github.com/user-attachments/assets/ef8e015d-a76a-4c73-bcc6-3a94ef26f19c" />
+
 * **Universal Class & Activity Support:** The script automatically detects the active mini-game based on what you are doing and your chosen class:
   * 🛠️ **Crafting (All Classes):** Reads and executes the directional Arrow sequence.
   * 🏹 **Battling (Ranger Class):** DOM-reactive aim-bot to instantly snipe shrinking targets.
