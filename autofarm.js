@@ -11,9 +11,11 @@
 
     let state = {
         active: false,
+        /** @type {number | null} */
         timer: null,
         isPlayingSequence: false,
         shieldBotRunning: false,
+        /** @type {number | null} */
         shieldBotRaf: null,
         shieldHistory: new WeakMap(),
         stats: {
@@ -27,9 +29,10 @@
     };
 
     const utils = {
-        simulateKeyPress: (key) => {
+        simulateKeyPress: (/** @type {string} */ key) => {
+            /** @type {Record<string, number>} */
             const map = { 'ArrowUp': 38, 'ArrowDown': 40, 'ArrowLeft': 37, 'ArrowRight': 39 };
-            const ev = (type) => document.dispatchEvent(new KeyboardEvent(type, {
+            const ev = (/** @type {string} */ type) => document.dispatchEvent(new KeyboardEvent(type, {
                 key,
                 code: key,
                 keyCode: map[key],
@@ -39,18 +42,18 @@
             ev('keyup');
         },
 
-        reactClick: (el) => {
+        reactClick: (/** @type {{ dispatchEvent: (arg0: MouseEvent) => void; }} */ el) => {
             ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click'].forEach(t =>
                 el.dispatchEvent(new MouseEvent(t, { bubbles: true, cancelable: true, view: window }))
             );
         },
 
-        px: (v) => {
+        px: (/** @type {string} */ v) => {
             const n = parseFloat(v);
             return Number.isFinite(n) ? n : 0;
         },
 
-        getCenter: (el) => {
+        getCenter: (/** @type {{ getBoundingClientRect: () => any; }} */ el) => {
             const rect = el.getBoundingClientRect();
             return {
                 x: rect.left + rect.width / 2,
@@ -60,7 +63,11 @@
             };
         },
 
-        dispatchMouseMove: (targetEl, clientX, clientY) => {
+        dispatchMouseMove: (
+            /** @type {{ dispatchEvent: (arg0: MouseEvent) => void; }} */ targetEl,
+            /** @type {any} */ clientX,
+            /** @type {any} */ clientY
+        ) => {
             const ev = new MouseEvent('mousemove', {
                 bubbles: true,
                 cancelable: true,
@@ -80,7 +87,9 @@
     // --- MINI-GAME: 3x3 GRID (Smithy) ---
     function handleTripletGrid() {
         // Find all grid items that haven't been matched yet
-        const items = Array.from(document.querySelectorAll("[class*='gridItem']")).filter(item => {
+        const items = /** @type {HTMLElement[]} */ (Array.from(
+            document.querySelectorAll("[class*='gridItem']")
+        )).filter(item => {
             // Discord usually adds a 'matched' class or changes opacity when solved
             const isMatched = item.className.toLowerCase().includes('matched') || item.style.opacity === "0";
             return !isMatched;
@@ -88,6 +97,7 @@
 
         if (items.length === 0) return;
 
+        /** @type {Record<string, HTMLElement[]>} */
         const groups = {};
         items.forEach(item => {
             const svg = item.querySelector("svg");
@@ -106,7 +116,7 @@
         for (let sig in groups) {
             if (groups[sig].length >= 3) {
                 console.log(`[SMITHY] Found triplet! Matching...`);
-                groups[sig].slice(0, 3).forEach((el, index) => {
+                groups[sig].slice(0, 3).forEach((/** @type {any} */ el, /** @type {number} */ index) => {
                     // Stagger the clicks slightly so the game registers all three
                     setTimeout(() => utils.reactClick(el), index * 100);
                 });
@@ -125,7 +135,7 @@
         if (arrows.length === 0) return;
 
         state.isPlayingSequence = true;
-        const seq = arrows.map(img => img.getAttribute('alt'));
+        const seq = arrows.map(img => img.getAttribute('alt') || '');
         seq.forEach((dir, i) => setTimeout(() => utils.simulateKeyPress(dir), i * 150));
         setTimeout(() => {
             state.isPlayingSequence = false;
@@ -164,9 +174,14 @@
 
         const getGame = () => document.querySelector(GAME_SELECTOR);
         const getShield = () => document.querySelector(SHIELD_SELECTOR);
-        const getProjectiles = () =>
-            [...document.querySelectorAll(PROJECTILE_SELECTOR)].filter((el) => el.isConnected);
+        const getProjectiles = () => [
+            ...document.querySelectorAll(PROJECTILE_SELECTOR),
+        ].filter((el) => el.isConnected);
 
+        /**
+         * @param {Element[]} projectiles
+         * @param {number} t
+         */
         function updateHistory(projectiles, t) {
             for (const p of projectiles) {
                 const rect = p.getBoundingClientRect();
@@ -181,15 +196,17 @@
 
                 const dt = Math.max((t - prev.t) / 1000, 0.0001);
                 state.shieldHistory.set(p, {
-                    x,
-                    y,
-                    t,
+                    x, y, t,
                     vx: (x - prev.x) / dt,
                     vy: (y - prev.y) / dt,
                 });
             }
         }
 
+        /**
+         * @param {Element} shield
+         * @param {Element[]} projectiles
+         */
         function getBestTarget(shield, projectiles) {
             const shieldCenter = utils.getCenter(shield);
             let best = null;
@@ -255,7 +272,7 @@
 
     function handlePopups() {
         const btns = document.querySelectorAll('[role="button"], .button__65fca');
-        const dismiss = Array.from(btns).find(el => {
+        const dismiss = /** @type {HTMLElement[]} */ (Array.from(btns)).find(el => {
             if (el.offsetParent === null) return false;
             const t = (el.textContent || "").toLowerCase();
             return t.includes('continue') || t.includes('go back') || t.includes('okay') || t.includes('close');
@@ -303,10 +320,12 @@
         stopBattleShield();
 
         // Home Navigation
-        const btns = Array.from(document.querySelectorAll('.button__65fca, .activityButton_8af73, [role="button"]'));
-        const findBtn = (n) => btns.find(el => {
+        const btns = /** @type {HTMLElement[]} */ (Array.from(
+            document.querySelectorAll('.button__65fca, .activityButton_8af73, [role="button"]')
+        ));
+        const findBtn = (/** @type {string} */ n) => btns.find(el => {
             const t = (el.textContent || "").toLowerCase();
-            const disabled = el.disabled || el.getAttribute('aria-disabled') === 'true' || el.className.toLowerCase().includes('disabled');
+            const disabled = /** @type {HTMLButtonElement} */ (el).disabled || el.getAttribute('aria-disabled') === 'true' || el.className.toLowerCase().includes('disabled');
             return t.includes(n.toLowerCase()) && !disabled && el.offsetParent !== null;
         });
 
@@ -319,7 +338,7 @@
         if (config.clickAdventure && adv) utils.reactClick(adv);
     }
 
-    window.tlmBot = {
+        /** @type {any} */ (window).tlmBot = {
         start: () => {
             if (state.active) return;
             state.active = true;
@@ -328,7 +347,7 @@
         },
 
         stop: () => {
-            clearInterval(state.timer);
+            if (state.timer !== null) clearInterval(state.timer);
             stopBattleShield();
             state.active = false;
             console.log("%c[TLM BOT] Stopped.", "color: #ff0000; font-weight: bold;");
@@ -340,5 +359,5 @@
         }
     };
 
-    window.tlmBot.start();
+    /** @type {any} */ (window).tlmBot.start();
 })();
