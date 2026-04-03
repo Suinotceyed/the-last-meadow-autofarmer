@@ -3,8 +3,8 @@
 
     const config = {
         loopSpeed: 150,
-        autoCraft: true,   // Handles both Arrows and 3x3 Grid
-        autoBattle: true,  // Handles Shrinking Targets + Shield
+        autoCraft: true,   
+        autoBattle: true,  
         clickDragon: true,
         clickAdventure: true,
     };
@@ -86,11 +86,9 @@
 
     // --- MINI-GAME: 3x3 GRID (Smithy) ---
     function handleTripletGrid() {
-        // Find all grid items that haven't been matched yet
         const items = /** @type {HTMLElement[]} */ (Array.from(
             document.querySelectorAll("[class*='gridItem']")
         )).filter(item => {
-            // Discord usually adds a 'matched' class or changes opacity when solved
             const isMatched = item.className.toLowerCase().includes('matched') || item.style.opacity === "0";
             return !isMatched;
         });
@@ -103,7 +101,6 @@
             const svg = item.querySelector("svg");
             if (!svg) return;
 
-            // Create a unique 'signature' based on the SVG paths
             const sig = Array.from(svg.querySelectorAll("path"))
                 .map(p => p.getAttribute("d"))
                 .join("") + svg.getAttribute("viewBox");
@@ -112,16 +109,13 @@
             groups[sig].push(item);
         });
 
-        // Find the first available triplet and click it
         for (let sig in groups) {
             if (groups[sig].length >= 3) {
-                console.log(`[SMITHY] Found triplet! Matching...`);
                 groups[sig].slice(0, 3).forEach((/** @type {any} */ el, /** @type {number} */ index) => {
-                    // Stagger the clicks slightly so the game registers all three
                     setTimeout(() => utils.reactClick(el), index * 100);
                 });
                 state.stats.tripletsMatched++;
-                return; // Exit and wait for next loop to find the next set
+                return; 
             }
         }
     }
@@ -178,10 +172,6 @@
             ...document.querySelectorAll(PROJECTILE_SELECTOR),
         ].filter((el) => el.isConnected);
 
-        /**
-         * @param {Element[]} projectiles
-         * @param {number} t
-         */
         function updateHistory(projectiles, t) {
             for (const p of projectiles) {
                 const rect = p.getBoundingClientRect();
@@ -203,10 +193,6 @@
             }
         }
 
-        /**
-         * @param {Element} shield
-         * @param {Element[]} projectiles
-         */
         function getBestTarget(shield, projectiles) {
             const shieldCenter = utils.getCenter(shield);
             let best = null;
@@ -234,7 +220,6 @@
                     };
                 }
             }
-
             return best;
         }
 
@@ -247,7 +232,6 @@
             const game = getGame();
             const shield = getShield();
 
-            // stop when minigame is gone
             if (!game || !shield) {
                 stopBattleShield();
                 return;
@@ -266,7 +250,6 @@
 
             state.shieldBotRaf = requestAnimationFrame(loop);
         }
-
         loop();
     }
 
@@ -296,7 +279,6 @@
             }
         }
 
-        // Detect mini-games
         if (document.querySelector('div[class*="sequences"]')) {
             stopBattleShield();
             return config.autoCraft && handleArrowSequence();
@@ -316,10 +298,8 @@
             return config.autoBattle && handleBattleTargets();
         }
 
-        // no shield game currently visible
         stopBattleShield();
 
-        // Home Navigation
         const btns = /** @type {HTMLElement[]} */ (Array.from(
             document.querySelectorAll('.button__65fca, .activityButton_8af73, [role="button"]')
         ));
@@ -338,28 +318,97 @@
         if (config.clickAdventure && adv) utils.reactClick(adv);
     }
 
-        /** @type {any} */ (window).tlmBot = {
+    // --- GUI OVERLAY SYSTEM ---
+    function createGUI() {
+        if (document.getElementById('tlm-gui')) return; 
+
+        const gui = document.createElement('div');
+        gui.id = 'tlm-gui';
+        gui.innerHTML = `
+            <div style="font-weight:bold; font-size:16px; margin-bottom:10px; text-align:center; border-bottom:1px solid #4f545c; padding-bottom:5px;">
+                🐉 TLM Auto-Farmer
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                <button id="tlm-btn-start" style="background:#3ba55d; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; width:48%;">START</button>
+                <button id="tlm-btn-stop" style="background:#ed4245; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; width:48%;">STOP</button>
+            </div>
+
+            <div style="font-size:12px; margin-bottom:15px; background:#202225; padding:8px; border-radius:4px;">
+                <label style="display:block; margin-bottom:5px;"><input type="checkbox" id="cb-craft" ${config.autoCraft ? 'checked' : ''}> Auto-Craft (Arrows/Grid)</label>
+                <label style="display:block; margin-bottom:5px;"><input type="checkbox" id="cb-battle" ${config.autoBattle ? 'checked' : ''}> Auto-Battle (All Classes)</label>
+                <label style="display:block; margin-bottom:5px;"><input type="checkbox" id="cb-dragon" ${config.clickDragon ? 'checked' : ''}> Auto-Snipe Boss</label>
+                <label style="display:block;"><input type="checkbox" id="cb-adv" ${config.clickAdventure ? 'checked' : ''}> Auto-Adventure</label>
+            </div>
+
+            <div style="font-size:11px; color:#b9bbbe;">
+                <div style="display:flex; justify-content:space-between;"><span>Status:</span> <span id="tlm-stat-status" style="color:#ed4245; font-weight:bold;">OFFLINE</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>Dragon Clicks:</span> <span id="tlm-stat-dragon">0</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>Targets Sniped:</span> <span id="tlm-stat-targets">0</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>Shield Blocks:</span> <span id="tlm-stat-shields">0</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>Arrows Solved:</span> <span id="tlm-stat-arrows">0</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>Grids Matched:</span> <span id="tlm-stat-grids">0</span></div>
+            </div>
+        `;
+
+        // Styling the container
+        Object.assign(gui.style, {
+            position: 'fixed',
+            top: '20px',
+            left: '20px',
+            width: '220px',
+            backgroundColor: '#2b2d31',
+            color: '#dcddde',
+            fontFamily: 'sans-serif',
+            padding: '12px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 10px rgba(0,0,0,0.5)',
+            zIndex: '999999',
+            border: '1px solid #1e1f22'
+        });
+
+        document.body.appendChild(gui);
+
+        // Event Listeners for UI
+        document.getElementById('tlm-btn-start').onclick = () => window.tlmBot.start();
+        document.getElementById('tlm-btn-stop').onclick = () => window.tlmBot.stop();
+        
+        document.getElementById('cb-craft').onchange = (e) => config.autoCraft = e.target.checked;
+        document.getElementById('cb-battle').onchange = (e) => config.autoBattle = e.target.checked;
+        document.getElementById('cb-dragon').onchange = (e) => config.clickDragon = e.target.checked;
+        document.getElementById('cb-adv').onchange = (e) => config.clickAdventure = e.target.checked;
+
+        // Start Live Stats Loop
+        setInterval(() => {
+            if (!document.getElementById('tlm-gui')) return;
+            const s = document.getElementById('tlm-stat-status');
+            s.innerText = state.active ? "RUNNING" : "OFFLINE";
+            s.style.color = state.active ? "#3ba55d" : "#ed4245";
+            
+            document.getElementById('tlm-stat-dragon').innerText = state.stats.dragonClicks;
+            document.getElementById('tlm-stat-targets').innerText = state.stats.targetsSniped;
+            document.getElementById('tlm-stat-shields').innerText = state.stats.shieldBlocks;
+            document.getElementById('tlm-stat-arrows').innerText = state.stats.sequencesSolved;
+            document.getElementById('tlm-stat-grids').innerText = state.stats.tripletsMatched;
+        }, 1000);
+    }
+
+    /** @type {any} */ (window).tlmBot = {
         start: () => {
             if (state.active) return;
             state.active = true;
             state.timer = setInterval(mainLoop, config.loopSpeed);
-            console.log("%c[TLM UNIVERSAL] Running!", "color: #00ff00; font-weight: bold;");
         },
-
         stop: () => {
             if (state.timer !== null) clearInterval(state.timer);
             stopBattleShield();
             state.active = false;
-            console.log("%c[TLM BOT] Stopped.", "color: #ff0000; font-weight: bold;");
         },
-
         config,
-
-        status: () => {
-            console.table(state.stats);
-            return state;
-        }
+        status: () => state
     };
 
-    /** @type {any} */ (window).tlmBot.start();
+    // Inject GUI and Auto-Start
+    createGUI();
+    window.tlmBot.start();
 })();
