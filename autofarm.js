@@ -286,7 +286,7 @@
 
         if (document.querySelector("[class*='gridItem']")) {
             stopBattleShield();
-            return config.autoCraft && handleTripletGrid();
+            return config.autoBattle && handleTripletGrid();
         }
 
         if (document.querySelector('img[class*="shield_"]')) {
@@ -322,52 +322,119 @@
     function createGUI() {
         if (document.getElementById('tlm-gui')) return; 
 
+        // Inject custom CSS with width fix, no-wrap, and frosted glass
+        const style = document.createElement('style');
+        style.innerHTML = `
+            #tlm-gui-container {
+                position: fixed; top: 20px; left: 20px; width: 290px; /* Wider container */
+                background-color: rgba(43, 45, 49, 0.95); color: #dcddde;
+                backdrop-filter: blur(4px); /* Frosted glass effect */
+                font-family: 'gg sans', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+                z-index: 999999; border: 1px solid rgba(255,255,255,0.1);
+            }
+            .tlm-btn {
+                border: none; padding: 6px 12px; border-radius: 4px; 
+                cursor: pointer; font-weight: bold; width: 48%; color: white;
+                transition: filter 0.2s ease;
+            }
+            .tlm-btn:hover { filter: brightness(1.15); }
+            .tlm-btn:active { filter: brightness(0.9); }
+            .tlm-checkbox-row {
+                display: flex; align-items: center; gap: 8px; /* Perfectly centered checkboxes */
+                margin-bottom: 8px; cursor: pointer; line-height: 1.3;
+                white-space: nowrap; /* Prevents text from ever wrapping */
+            }
+            .tlm-checkbox-row input { 
+                margin: 0; cursor: pointer; flex-shrink: 0; 
+            }
+            .tlm-stat-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
+        `;
+        document.head.appendChild(style);
+
         const gui = document.createElement('div');
         gui.id = 'tlm-gui';
+        
         gui.innerHTML = `
-            <div style="font-weight:bold; font-size:16px; margin-bottom:10px; text-align:center; border-bottom:1px solid #4f545c; padding-bottom:5px;">
-                🐉 TLM Auto-Farmer
-            </div>
-            
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                <button id="tlm-btn-start" style="background:#3ba55d; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; width:48%;">START</button>
-                <button id="tlm-btn-stop" style="background:#ed4245; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold; width:48%;">STOP</button>
-            </div>
+            <div id="tlm-gui-container">
+                <div id="tlm-gui-header" style="font-weight:bold; font-size:14px; background:rgba(30,31,34,0.8); padding:8px 12px; border-bottom:1px solid rgba(255,255,255,0.1); cursor:move; display:flex; justify-content:space-between; align-items:center; user-select:none; border-radius:8px 8px 0 0;">
+                    <span>🐉 TLM Auto-Farmer</span>
+                    <span id="tlm-btn-collapse" style="cursor:pointer; color:#b9bbbe; font-size:16px; font-family:monospace; padding:0 4px;">[-]</span>
+                </div>
+                
+                <div id="tlm-gui-body" style="padding:12px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <button id="tlm-btn-start" class="tlm-btn" style="background:#3ba55d;">START</button>
+                        <button id="tlm-btn-stop" class="tlm-btn" style="background:#ed4245;">STOP</button>
+                    </div>
 
-            <div style="font-size:12px; margin-bottom:15px; background:#202225; padding:8px; border-radius:4px;">
-                <label style="display:block; margin-bottom:5px;"><input type="checkbox" id="cb-craft" ${config.autoCraft ? 'checked' : ''}> Auto-Craft (Arrows/Grid)</label>
-                <label style="display:block; margin-bottom:5px;"><input type="checkbox" id="cb-battle" ${config.autoBattle ? 'checked' : ''}> Auto-Battle (All Classes)</label>
-                <label style="display:block; margin-bottom:5px;"><input type="checkbox" id="cb-dragon" ${config.clickDragon ? 'checked' : ''}> Auto-Snipe Boss</label>
-                <label style="display:block;"><input type="checkbox" id="cb-adv" ${config.clickAdventure ? 'checked' : ''}> Auto-Adventure</label>
-            </div>
+                    <div style="font-size:13px; margin-bottom:15px; background:rgba(32,34,37,0.8); padding:10px; border-radius:6px; border: 1px solid rgba(255,255,255,0.05);">
+                        <label class="tlm-checkbox-row">
+                            <input type="checkbox" id="cb-craft" ${config.autoCraft ? 'checked' : ''}>
+                            <span>Auto-Craft (Arrows)</span>
+                        </label>
+                        <label class="tlm-checkbox-row">
+                            <input type="checkbox" id="cb-battle" ${config.autoBattle ? 'checked' : ''}>
+                            <span>Auto-Battle (Targets/Shields/Grid)</span>
+                        </label>
+                        <label class="tlm-checkbox-row">
+                            <input type="checkbox" id="cb-dragon" ${config.clickDragon ? 'checked' : ''}>
+                            <span>Auto-Snipe Boss</span>
+                        </label>
+                        <label class="tlm-checkbox-row" style="margin-bottom:0;">
+                            <input type="checkbox" id="cb-adv" ${config.clickAdventure ? 'checked' : ''}>
+                            <span>Auto-Adventure</span>
+                        </label>
+                    </div>
 
-            <div style="font-size:11px; color:#b9bbbe;">
-                <div style="display:flex; justify-content:space-between;"><span>Status:</span> <span id="tlm-stat-status" style="color:#ed4245; font-weight:bold;">OFFLINE</span></div>
-                <div style="display:flex; justify-content:space-between;"><span>Dragon Clicks:</span> <span id="tlm-stat-dragon">0</span></div>
-                <div style="display:flex; justify-content:space-between;"><span>Targets Sniped:</span> <span id="tlm-stat-targets">0</span></div>
-                <div style="display:flex; justify-content:space-between;"><span>Shield Blocks:</span> <span id="tlm-stat-shields">0</span></div>
-                <div style="display:flex; justify-content:space-between;"><span>Arrows Solved:</span> <span id="tlm-stat-arrows">0</span></div>
-                <div style="display:flex; justify-content:space-between;"><span>Grids Matched:</span> <span id="tlm-stat-grids">0</span></div>
+                    <div style="font-size:12px; color:#b9bbbe; padding: 0 4px;">
+                        <div class="tlm-stat-row"><span>Status:</span> <span id="tlm-stat-status" style="color:#ed4245; font-weight:bold;">OFFLINE</span></div>
+                        <div class="tlm-stat-row"><span>Dragon Clicks:</span> <span id="tlm-stat-dragon">0</span></div>
+                        <div class="tlm-stat-row"><span>Targets Sniped:</span> <span id="tlm-stat-targets">0</span></div>
+                        <div class="tlm-stat-row"><span>Shield Blocks:</span> <span id="tlm-stat-shields">0</span></div>
+                        <div class="tlm-stat-row"><span>Arrows Solved:</span> <span id="tlm-stat-arrows">0</span></div>
+                        <div class="tlm-stat-row"><span>Grids Matched:</span> <span id="tlm-stat-grids">0</span></div>
+                    </div>
+                </div>
             </div>
         `;
-
-        // Styling the container
-        Object.assign(gui.style, {
-            position: 'fixed',
-            top: '20px',
-            left: '20px',
-            width: '220px',
-            backgroundColor: '#2b2d31',
-            color: '#dcddde',
-            fontFamily: 'sans-serif',
-            padding: '12px',
-            borderRadius: '8px',
-            boxShadow: '0 4px 10px rgba(0,0,0,0.5)',
-            zIndex: '999999',
-            border: '1px solid #1e1f22'
-        });
-
         document.body.appendChild(gui);
+
+        const container = document.getElementById('tlm-gui-container');
+
+        // --- Dragging Logic ---
+        let isDragging = false, currentX, currentY, initialX, initialY;
+        const header = document.getElementById('tlm-gui-header');
+        
+        header.onmousedown = function(e) {
+            isDragging = true;
+            initialX = e.clientX - container.offsetLeft;
+            initialY = e.clientY - container.offsetTop;
+        };
+        
+        document.onmousemove = function(e) {
+            if (isDragging) {
+                e.preventDefault();
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+                container.style.left = currentX + 'px';
+                container.style.top = currentY + 'px';
+            }
+        };
+        
+        document.onmouseup = function() {
+            isDragging = false;
+        };
+
+        // --- Collapse Logic ---
+        let isCollapsed = false;
+        document.getElementById('tlm-btn-collapse').onclick = function() {
+            isCollapsed = !isCollapsed;
+            document.getElementById('tlm-gui-body').style.display = isCollapsed ? 'none' : 'block';
+            this.innerText = isCollapsed ? '[+]' : '[-]';
+            container.style.borderBottom = isCollapsed ? 'none' : '1px solid rgba(255,255,255,0.1)';
+            header.style.borderRadius = isCollapsed ? '8px' : '8px 8px 0 0';
+        };
 
         // Event Listeners for UI
         document.getElementById('tlm-btn-start').onclick = () => window.tlmBot.start();
