@@ -11,6 +11,7 @@ Unlike basic auto-clickers, this script features a **Priority Engine** that inte
   * 🛠️ **Crafting (All Classes):** Reads and executes the directional Arrow sequence.
   * 🏹 **Battling (Ranger Class):** DOM-reactive aim-bot to instantly snipe shrinking targets.
   * ✨ **Battling (Priest Class):** SVG-signature matching to perfectly clear the 3x3 triplet grid.
+  * 🛡️ **Battling (Mage Class):** Auto-Places the shield at projectiles to block them.
 * **Priority Engine:** Intelligently switches between Crafting, Battling, and Adventuring based on cooldowns so you never waste a second.
 * **Auto-Dismiss Errors:** Automatically detects and clears "Continue", "Go Back", and "Okay" popups to prevent the bot from getting stuck.
 * **React-Safe Clicks:** Bypasses Discord's strict event listeners by simulating physical mouse and keyboard events.
