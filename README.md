@@ -33,15 +33,12 @@ The script automatically detects your active mini-game and chosen class, deployi
 
 ## 🚀 Installation & Usage
 
-Because Discord Activities run inside an isolated web `iframe`, you must inject this script using your web browser's Developer Tools.
-
 1. Open Discord in your **web browser** (Chrome, Firefox, Edge, etc.) and launch *The Last Meadow*.
 2. Press `F12` (or `Ctrl+Shift+I`) to open your browser's Developer Tools.
 3. Navigate to the **Console** tab.
-4. **⚠️ CRITICAL:** At the top of the Console, change your javascript context from `top` to the activity's iframe (usually named something like `activity` or `The Last Meadow`). If you leave it on `top`, the script won't be able to find the game!
-5. Open `autofarm.js` from this repository and copy all the code.
-6. Paste the code into the console and hit **Enter**.
-7. The TLM Bot interface will appear in the top-left corner of the game. Click "Start Farming"!
+4. Copy the script code.
+5. Paste the code into the console and hit **Enter**.
+6. The TLM Bot interface will appear in the top-left corner of the game. Click "Start Farming"!
 
 ---
 
