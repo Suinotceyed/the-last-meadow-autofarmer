@@ -2,24 +2,25 @@
     "use strict";
 
     try { if (typeof window.tlmBot?.stop === "function") window.tlmBot.stop(); } catch {}
+    
     const existingGui = document.getElementById('tlm-gui');
     if (existingGui) existingGui.remove();
+    const existingStyle = document.getElementById('tlm-gui-styles');
+    if (existingStyle) existingStyle.remove();
 
     const config = {
         autoCraft: true,
         autoBattle: true,
         clickDragon: true,
-        clickAdventure: true,
+        clickAdventure: true
     };
 
     const ENGINE_CONF = Object.freeze({
         dragonMs: 50, activityMs: 50, pollMs: 25, settleMs: 20, keyDelayMs: 70, craftRetrySameSeqMs: 700,
         palSmooth: 1, palAimY: 0.93, palTopDelta: 120, palDualCoverRatio: 1.08, palDefaultShieldW: 138, palDefaultProjW: 115, palMinShieldW: 96, blockRealMouse: true,
-        priestClickDelayMs: 28, priestTripletDelayMs: 120, goBackScanMs: 60, goBackCooldownMs: 250
+        priestClickDelayMs: 28, priestTripletDelayMs: 120, goBackScanMs: 60, goBackCooldownMs: 250,
+        mutationThrottleMs: 100
     });
-
-    const RANGER_HASH = "16fb25536f00a7996cbdf5bfff2ef0d09459f580af9e67d380263f5ead43055e";
-    const PRIEST_MATCHED_CLASS = "matched__0dcd3";
 
     const SELECTORS = Object.freeze({
         target: 'img[alt="target"], [class*="targetContainer"]', 
@@ -36,7 +37,7 @@
         priestItem: '[class*="gridItem"]', 
         priestGlyph: 'svg',
         modalResourceText: "[class*='text_'], [data-text-variant='text-lg/normal']",
-        goBackBtn: ".button__65fca.buttonWhite__65fca.clickable__5c90e"
+        rangerContainer: '[class*="ranger__"], [class*="archery__"]' 
     });
 
     const KEY_MAP = Object.freeze({
@@ -72,6 +73,10 @@
         return !(parseFloat(style.opacity || "1") < 0.02);
     }
 
+    function isPriestMatched(el) {
+        return Array.from(el.classList).some(className => className.startsWith('matched__') || className.startsWith('matched-') || className.includes('matched'));
+    }
+
     function resolveEventCtor(target, ctorName) {
         const targetWin = target?.ownerDocument?.defaultView || target?.defaultView || (target?.window === target ? target : window);
         return targetWin?.[ctorName] || window?.[ctorName] || globalThis?.[ctorName] || null;
@@ -80,7 +85,9 @@
     function dispatchSafe(target, ctorName, type, options) {
         if (!target || typeof target.dispatchEvent !== "function") return;
         const EventCtor = resolveEventCtor(target, ctorName);
-        if (typeof EventCtor === "function") { try { target.dispatchEvent(new EventCtor(type, options)); } catch {} }
+        if (typeof EventCtor === "function") { 
+            try { target.dispatchEvent(new EventCtor(type, options)); } catch {}
+        }
     }
 
     const emitPointer = (target, type, options) => dispatchSafe(target, "PointerEvent", type, options);
@@ -116,10 +123,12 @@
         if (Date.now() - state.lastGoBackClickAt < ENGINE_CONF.goBackCooldownMs) return false;
         const warningNode = queryAll(SELECTORS.modalResourceText).find(el => isVisible(el) && /out of resources/i.test((el.textContent || "").trim()));
         if (!warningNode) return false;
-        let button = queryAll(SELECTORS.goBackBtn).find(candidate => isVisible(candidate)) || Array.from(document.querySelectorAll('.button__65fca, [role="button"]')).find(el => {
+        
+        let button = Array.from(document.querySelectorAll('button, [role="button"], [class*="button"]')).find(el => {
             const t = (el.textContent || "").toLowerCase();
             return (t.includes('go back') || t.includes('okay')) && isVisible(el);
         });
+        
         if (!button) return false;
         state.lastGoBackClickAt = Date.now();
         hardClick(button); setTimeout(() => hardClick(button), 60);
@@ -141,7 +150,7 @@
 
     function runDragonTick() {
         if (!state.active || !config.clickDragon) return;
-        const el = queryOne(".dragonClickable__8e80e") || queryOne('img[alt="Grass Toucher"]');
+        const el = queryOne('[class^="dragonClickable"]') || queryOne('div[class*="dragonContainer"] > div[role="button"]');
         if (el) { hardClick(el); state.stats.dragonClicks++; }
     }
 
@@ -175,11 +184,11 @@
         try {
             for (const key of keys) {
                 let sent = 0;
-                try { sendKey(document, key); sent++; } catch(e) {}
-                try { sendKey(document.body, key); sent++; } catch(e) {}
+                try { sendKey(document, key); sent++; } catch {}
+                try { sendKey(document.body, key); sent++; } catch {}
                 const active = document.activeElement;
                 if (active && active !== document.body && document.contains(active)) {
-                    try { sendKey(active, key); sent++; } catch(e) {}
+                    try { sendKey(active, key); sent++; } catch {}
                 }
                 await delay(ENGINE_CONF.keyDelayMs);
             }
@@ -377,7 +386,7 @@
     }
 
     function hasPriestBoard() {
-        const grid = queryOne(SELECTORS.priestGrid) || queryOne(".game__5c62c");
+        const grid = queryOne(SELECTORS.priestGrid) || queryOne('[class^="game__"]');
         if (!grid) return false;
         const items = queryAll(SELECTORS.priestItem).filter(isVisible);
         return items.length >= 3;
@@ -392,7 +401,7 @@
     }
 
     function buildPriestGroups() {
-        const items = queryAll(SELECTORS.priestItem).filter((el) => isVisible(el) && !el.classList.contains(PRIEST_MATCHED_CLASS));
+        const items = queryAll(SELECTORS.priestItem).filter((el) => isVisible(el) && !isPriestMatched(el));
         const groupsBySignature = new Map();
         for (const item of items) {
             const signature = getPriestGlyphSignature(item);
@@ -411,7 +420,7 @@
             if (!groups.length) return;
             for (const group of groups) {
                 if (state.mode !== "priest") break;
-                const live = group.filter((el) => document.contains(el) && isVisible(el) && !el.classList.contains(PRIEST_MATCHED_CLASS));
+                const live = group.filter((el) => document.contains(el) && isVisible(el) && !isPriestMatched(el));
                 if (live.length < 3) continue;
                 for (const tile of live) {
                     if (state.mode !== "priest") break;
@@ -448,10 +457,10 @@
         if (getPaladinContext()) return "paladin";
         if (hasPriestBoard()) return "priest";
         if (queryAll(SELECTORS.target).some(isVisible)) return "ranger";
-        for (const wrapper of queryAll(SELECTORS.activity)) {
-            const img = wrapper.querySelector("img.activityButtonAsset__8af73, img.asset__65fca");
-            if (img && img.src && img.src.includes(RANGER_HASH)) return "ranger";
-        }
+        
+        const rangerContainer = queryOne(SELECTORS.rangerContainer);
+        if (rangerContainer && isVisible(rangerContainer)) return "ranger";
+        
         return null;
     }
 
@@ -475,15 +484,6 @@
         if (state.mode === "priest" && (node.matches?.(SELECTORS.priestItem) || node.matches?.(SELECTORS.priestGrid) || node.querySelector?.(SELECTORS.priestItem))) priestTick();
     }
 
-    function handleMutation(mutation) {
-        for (const node of mutation.addedNodes) handleAddedNode(node);
-        if (mutation.type === "childList" && mutation.target instanceof Element) {
-            if (mutation.target.closest?.(SELECTORS.seq) || mutation.target.matches?.(SELECTORS.seq)) {
-                doSequence(mutation.target.closest(SELECTORS.seq) || mutation.target);
-            }
-        }
-    }
-
     function runPollTick() {
         if (!state.active) return;
         tryClickGoBackModal(); checkBattleMode();
@@ -497,6 +497,7 @@
     function createGUI() {
         if (document.getElementById('tlm-gui')) return; 
         const style = document.createElement('style');
+        style.id = 'tlm-gui-styles'; 
         style.innerHTML = `
             #tlm-gui-container { position: fixed; top: 20px; left: 20px; width: 300px; background-color: rgba(30, 30, 35, 0.75); color: #ffffff; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); font-family: -apple-system, BlinkMacSystemFont, 'gg sans', sans-serif; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.4); z-index: 999999; border: 1px solid rgba(255,255,255,0.15); }
             #tlm-gui-header { font-weight: 700; font-size: 14px; padding: 12px 16px; background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.08); cursor: grab; display: flex; justify-content: space-between; align-items: center; user-select: none; }
@@ -575,11 +576,28 @@
             state.activityTimer = setInterval(runActivityTick, ENGINE_CONF.activityMs);
             state.goBackTimer = setInterval(tryClickGoBackModal, ENGINE_CONF.goBackScanMs);
             state.pollTimer = setInterval(runPollTick, ENGINE_CONF.pollMs);
+            
+            let mutationTimeout = null;
+            let pendingNodes = new Set();
+
             state.observer = new MutationObserver(mutations => {
                 if (!state.active) return;
-                tryClickGoBackModal(); checkBattleMode();
-                for (const mutation of mutations) handleMutation(mutation);
+                
+                for (const mutation of mutations) {
+                    for (const node of mutation.addedNodes) {
+                        if (node.nodeType === 1) pendingNodes.add(node);
+                    }
+                }
+                
+                if (!mutationTimeout) {
+                    mutationTimeout = setTimeout(() => {
+                        pendingNodes.forEach(handleAddedNode);
+                        pendingNodes.clear();
+                        mutationTimeout = null;
+                    }, ENGINE_CONF.mutationThrottleMs);
+                }
             });
+            
             state.observer.observe(document.body, { childList: true, subtree: true });
         },
         stop: () => {
